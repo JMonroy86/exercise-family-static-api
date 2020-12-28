@@ -6,6 +6,7 @@ from flask import Flask, request, jsonify, url_for
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from datastructures import FamilyStructure
+import json
 #from models import Person
 
 app = Flask(__name__)
@@ -31,13 +32,37 @@ def handle_hello():
     # this is how you can use the Family datastructure by calling its methods
     members = jackson_family.get_all_members()
     response_body = {
-        "hello": "world",
         "family": members
     }
-
-
     return jsonify(response_body), 200
 
+@app.route('/members/<int:member_id>', methods=['GET'])
+def getmember(member_id):
+    member=jackson_family.get_member(member_id)
+    response_body = {
+        "miembro" : member
+    }
+    return jsonify(response_body), 200
+
+@app.route('/members', methods =['POST'])
+def addmember():
+    newmember = json.loads(request.data)
+    # json.loads() es un metodo de python que transforma el JSON a python
+    # request.data es la informacion que viene desde insomnia y en el fetch en el body
+    # en este caso es el objeto con los datos del nuevo miembro
+    jackson_family.add_member(newmember)
+    # se lo pasamos al metodo add.member() que esta definido en datastructure.py y lo guardamos
+    # en una variable para despues mostrarlo como respuesta al usuario
+    members = jackson_family.get_all_members()
+    return jsonify(members), 200
+    
+@app.route('/members/<int:member_id>', methods = ['DELETE'])
+def delmember(member_id):
+    jackson_family.delete_member(member_id)
+    members = jackson_family.get_all_members()
+    return jsonify(members), 200
+
+    
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
